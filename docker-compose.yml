@@ -1,0 +1,52 @@
+version: '3'
+
+networks:
+  backend:
+    driver: bridge
+
+services:
+
+## NGINX Server #########################################
+    nginx:
+      build:
+        context: ./nginx
+      container_name: Nginx
+      restart: always
+      volumes:
+        - /home/newphp:/var/www/newphp
+        - /home/Newphp:/var/www/Newphp
+        - ./logs/nginx:/var/log/nginx
+        - ./nginx/sites:/etc/nginx/conf.d
+      ports:
+        - "80:80"
+      networks:
+        backend:
+          aliases:
+            - api.zwphp.test
+            - web.zwphp.test
+
+## NGINX-VTS-EXPORTER #########################################
+    vts-exporter:
+      build:
+        context: ./vts-exporter
+      container_name: Vts-Exporter
+      restart: always
+      ports:
+        - "9913:9913"
+      networks:
+        - backend
+
+## php-fpm #######################################
+    php-fpm:
+      build:
+        context: ./php-fpm
+      container_name: PHP-FPM
+      restart: always
+      volumes:
+        - ./php-fpm/php.ini:/usr/local/etc/php/php.ini
+        - /home/newphp:/var/www/newphp
+        - /home/Newphp:/var/www/Newphp
+      ports:
+        - "9000:9000"
+      networks:
+        - backend
